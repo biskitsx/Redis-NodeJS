@@ -6,19 +6,19 @@ export const getUser = async (req: Request, res: Response, next: NextFunction) =
     try {
         const { user } = req.params
         //@ts-ignore
-        if (req.name) {
+        if (req.user) {
             //@ts-ignore
-            const name = req.name
-            return res.json({ name })
+            const data = req.user
+            return res.json(data)
         }
-        const response = await axios.get(`https://api.github.com/users/${user}`)
-        const { name } = response.data
 
-        await redisClient.setEx(user, 3600, name)
-        return res.json({ name })
+        const response = await axios.get(`https://api.github.com/users/${user}`)
+        const { name, location, type } = response.data
+        const data = { name, location, type }
+
+        await redisClient.setEx(`user-${user}`, 60, JSON.stringify(data))
+        return res.json(data)
     } catch (error: any) {
-        res.json({
-            msg: error.message
-        })
+        next(error)
     }
 }

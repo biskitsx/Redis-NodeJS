@@ -1,17 +1,15 @@
 import { NextFunction, Request, Response } from "express"
 import { redisClient } from "../db/redis"
-import { error } from "console"
 
 export const cacheUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { user } = req.params
-        if (!user) {
-            return next(error)
+        const cache = await redisClient.get(`user-${user}`)
+        if (cache) {
+            //@ts-ignore
+            req.user = JSON.parse(cache)
         }
-        const data = await redisClient.get(user)
-        //@ts-ignore
-        req.name = data
-        next()
+        return next()
     } catch (error: any) {
         next(error)
     }
